@@ -1,0 +1,6 @@
+asyncpg==0.29.0
+requests==2.31.0
+aiogram==2.14.2
+aiohttp==3.8.6
+pillow==10.3.0
+
