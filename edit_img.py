@@ -1,3 +1,4 @@
+import os
 import time
 
 from PIL import Image, ImageFilter
@@ -21,9 +22,9 @@ def blur_image(image_path, radius=2):
 
 # Применяем размытие и сохраняем изображение
 def edit_photo(file_path):
-    input_image_path = "tmp/files/" + file_path
+    input_image_path = os.path.join("tmp", "files", file_path)
     unique_name = int(time.time())
-    output_image_path = f"./tmp/files/final_photos/final_photo_{unique_name}.jpg"
+    output_image_path = os.path.join("tmp", "files", "final_photos", f"final_photo_{unique_name}.jpg")
     blurred_image = blur_image(input_image_path, 30)
     if blurred_image:
         blurred_image.save(output_image_path)
