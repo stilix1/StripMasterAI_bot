@@ -10,6 +10,7 @@ import requests
 from aiogram import Bot, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext, Dispatcher
+from aiogram.dispatcher.filters import state
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
 
@@ -29,18 +30,11 @@ dp = Dispatcher(bot, storage=storage)
 
 user_lang = None
 
-start_photo = 'https://img.freepik.com/free-vector/young-people-talking-in-different-languages-illustrations-set_23' \
-              '-2148370672.jpg?size=626&ext=jpg&ga=GA1.1.1518270500.1713312000&semt=ais '
-
 
 class PhotoStates(StatesGroup):
     waiting_for_preset = State()
     waiting_for_photo = State()
-
-
-# open menu photo to send
-with open(settings.menu_photo_path, 'rb') as f:
-    menu_photo = f.read()
+    waiting_for_bust_size = State()
 
 
 # Commands handlers ___________________________________________________________
@@ -54,10 +48,7 @@ async def start_command(message: types.Message):
 
     replay_keyboard = markups.replay_keyboard()
     await bot.send_message(chat_id=message.chat.id,
-                           text='''Welocme!
-                           /menu - menu
-                           /language - change language''',
-
+                           text='Welcome!\n/menu - menu\n/language - change language',
                            reply_markup=replay_keyboard,
                            parse_mode='Markdown')
 
@@ -72,19 +63,14 @@ async def start_command(message: types.Message):
             await db.add_referral_credits(dp['db_pool'], invited_by)
 
         caption = "Welcome! Please select your language."
-        await bot.send_photo(chat_id=message.chat.id, photo=start_photo, caption=caption,
-                             reply_markup=markups.ikb_start)
+        await bot.send_message(chat_id=message.chat.id, text=caption, reply_markup=markups.ikb_start)
     else:
         caption = tr.translations_list[user_lang]['captions_terms']
         ikb_terms = markups.create_terms_keyboard(user_lang)
-        await bot.send_photo(chat_id=message.chat.id,
-                             photo=menu_photo,
-                             caption=caption,
-                             reply_markup=ikb_terms,
-                             parse_mode='Markdown')
+        await bot.send_message(chat_id=message.chat.id, text=caption, reply_markup=ikb_terms, parse_mode='Markdown')
 
 
-# Menu buttons handlers___________________________________________________________________
+# Menu buttons handlers ___________________________________________________________________
 @dp.message_handler(content_types=["text"])
 async def reply_start(message: types.Message):
     if message.text == '💼Menu':
@@ -98,15 +84,11 @@ async def reply_start(message: types.Message):
 
                 # Отправляем меню и клавиатуру
                 caption = translations['captions_menu']
-                await bot.send_photo(chat_id=message.chat.id,
-                                     photo=menu_photo,
-                                     caption=caption,
-                                     reply_markup=ikb_menu,
-                                     parse_mode='Markdown')
+                await bot.send_message(chat_id=message.chat.id, text=caption, reply_markup=ikb_menu,
+                                       parse_mode='Markdown')
             else:
                 text = 'unset user language. Use /start'
-                await bot.send_message(chat_id=message.chat.id,
-                                       text=text)
+                await bot.send_message(chat_id=message.chat.id, text=text)
         except Exception as e:
             print(f'Error! Unset user_lang: {e}')
 
@@ -120,8 +102,7 @@ async def lang_callback(callback: types.CallbackQuery):
     await db.update_user_language(dp['db_pool'], user_id, user_lang)
 
     # Удаляем предыдущее сообщение с клавиатурой выбора языка
-    await bot.delete_message(chat_id=callback.message.chat.id,
-                             message_id=callback.message.message_id)
+    await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.message_id)
 
     # Получаем обновленные переводы для нового выбранного языка
     translations = tr.translations_list[user_lang]
@@ -130,11 +111,7 @@ async def lang_callback(callback: types.CallbackQuery):
 
     # Отправляем фото с новым описанием и клавиатурой
     caption = translations['captions_menu']
-    await bot.send_photo(chat_id=callback.message.chat.id,
-                         photo=menu_photo,
-                         caption=caption,
-                         reply_markup=ikb_menu,
-                         parse_mode='Markdown')
+    await bot.send_message(chat_id=callback.message.chat.id, text=caption, reply_markup=ikb_menu, parse_mode='Markdown')
 
 
 @dp.callback_query_handler(lambda callback: callback.data in ['terms_yes', 'terms_no'])
@@ -146,33 +123,35 @@ async def terms_callback(callback: types.CallbackQuery):
     if callback.data == 'terms_yes':
         ikb_menu = markups.create_menu_keyboard(user_lang)
         caption = tr.translations_list[user_lang]['captions_menu']
-        await bot.edit_message_caption(chat_id=callback.message.chat.id,
-                                       message_id=callback.message.message_id,
-                                       caption=caption,
-                                       reply_markup=ikb_menu,
-                                       parse_mode='Markdown')
+        await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                    message_id=callback.message.message_id,
+                                    text=caption,
+                                    reply_markup=ikb_menu,
+                                    parse_mode='Markdown')
     else:
         caption = tr.translations_list[user_lang]['captions_terms_no']
-        await bot.edit_message_caption(chat_id=callback.message.chat.id,
-                                       message_id=callback.message.message_id,
-                                       caption=caption)
+        await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                    message_id=callback.message.message_id,
+                                    text=caption)
 
 
-@dp.callback_query_handler(lambda callback: callback.data == 'back')
-async def back_callback(callback: types.CallbackQuery):
+# Handler for the "Back" button
+@dp.callback_query_handler(lambda callback: callback.data == 'back', state='*')
+async def back_callback(callback: types.CallbackQuery, state: FSMContext):
+    await state.finish()  # Finish the current state
     user_id = str(callback.from_user.id)
-    user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Получение языка пользователя
+    user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Get user language
 
     if user_lang is None:
-        user_lang = 'en'  # Дефолтное значение, если язык не найден
+        user_lang = 'en'  # Default language if not found
 
     ikb_menu = markups.create_menu_keyboard(user_lang)
     caption = tr.translations_list[user_lang]['captions_menu']
-    await bot.edit_message_caption(chat_id=callback.message.chat.id,
-                                   message_id=callback.message.message_id,
-                                   caption=caption,
-                                   reply_markup=ikb_menu,
-                                   parse_mode='Markdown')
+    await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                message_id=callback.message.message_id,
+                                text=caption,
+                                reply_markup=ikb_menu,
+                                parse_mode='Markdown')
 
 
 @dp.callback_query_handler(lambda callback: callback.data == 'profile')
@@ -192,10 +171,10 @@ async def profile_callback(callback: types.CallbackQuery):
                                                                                  created_at=user_data['created_at'])
 
     ikb_profile = markups.create_profile_keyboard(user_lang)
-    await bot.edit_message_caption(chat_id=callback.message.chat.id,
-                                   message_id=callback.message.message_id,
-                                   caption=profile_message,
-                                   reply_markup=ikb_profile)
+    await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                message_id=callback.message.message_id,
+                                text=profile_message,
+                                reply_markup=ikb_profile)
 
 
 @dp.message_handler(commands=['language'])
@@ -207,9 +186,7 @@ async def language_command(message: types.Message):
         user_lang = 'en'  # Дефолтное значение, если язык не найден
 
     caption = "Please select your language."
-    await bot.send_message(chat_id=message.chat.id,
-                           text=caption,
-                           reply_markup=markups.ikb_start)
+    await bot.send_message(chat_id=message.chat.id, text=caption, reply_markup=markups.ikb_start)
 
 
 # Profile buttons handlers _________________________________________________
@@ -232,10 +209,10 @@ async def referral_callback(callback: types.CallbackQuery):
                                                                          processing=user_data['balance'] // 20)
 
     ikb_ref = markups.create_ref_keyboard(user_lang)
-    await bot.edit_message_caption(chat_id=callback.message.chat.id,
-                                   message_id=callback.message.message_id,
-                                   caption=ref_message,
-                                   reply_markup=ikb_ref)
+    await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                message_id=callback.message.message_id,
+                                text=ref_message,
+                                reply_markup=ikb_ref)
 
 
 # SendPhoto handlers + save photo in local files _________________________________________________
@@ -247,16 +224,84 @@ async def send_photo_api_callback(callback: types.CallbackQuery, state: FSMConte
     if user_lang is None:
         user_lang = 'en'  # Дефолтное значение, если язык не найден
 
-    ikb_preset = markups.create_preset_keyboard(user_lang)
     caption = tr.translations_list[user_lang]['captions_send_photo_api']
+    ikb_back = markups.create_back_keyboard(user_lang)
+    await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                message_id=callback.message.message_id,
+                                text=caption,
+                                parse_mode='Markdown')
 
-    await bot.edit_message_caption(chat_id=callback.message.chat.id,
-                                   message_id=callback.message.message_id,
-                                   caption=caption,
-                                   reply_markup=ikb_preset,
-                                   parse_mode='Markdown')
+    photo_request_message = await bot.send_message(chat_id=callback.message.chat.id,
+                                                   text="Please send a photo for processing.",
+                                                   reply_markup=ikb_back)
+    await state.update_data(photo_request_message_id=photo_request_message.message_id)
+    await PhotoStates.waiting_for_photo.set()
 
-    # Устанавливаем состояние ожидания выбора пресета
+@dp.message_handler(content_types=types.ContentType.PHOTO, state=PhotoStates.waiting_for_photo)
+async def handle_photo(message: types.Message, state: FSMContext):
+    user_id = str(message.from_user.id)
+    user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Получение языка пользователя
+
+    if user_lang is None:
+        user_lang = 'en'  # Дефолтное значение, если язык не найден
+
+    data = await state.get_data()
+    photo_request_message_id = data.get('photo_request_message_id')
+
+    # Удаляем сообщение "Please send a photo for processing."
+    if photo_request_message_id:
+        await bot.delete_message(chat_id=message.chat.id, message_id=photo_request_message_id)
+
+    file_info = await bot.get_file(message.photo[-1].file_id)
+    file_path = file_info.file_path
+
+    # Создаем папку, если она не существует
+    os.makedirs('./tmp/files/photos', exist_ok=True)
+
+    # Получаем абсолютный путь к файлу
+    file_name = os.path.join(os.getcwd(), './tmp/files/photos', os.path.basename(file_path))
+
+    # Скачиваем файл
+    await bot.download_file(file_path, file_name)
+
+    # Сохраняем путь к фото в состоянии
+    await state.update_data(photo_path=file_name)
+
+    # Отправляем сообщение с выбором размера бюста
+    ikb_bust_size = markups.create_bust_size_keyboard(user_lang)
+    bust_size_message = await bot.send_message(chat_id=message.chat.id,
+                                               text=tr.translations_list[user_lang]['captions_bust_size'],
+                                               reply_markup=ikb_bust_size)
+    await state.update_data(bust_size_message_id=bust_size_message.message_id)
+    await PhotoStates.waiting_for_bust_size.set()
+
+
+@dp.callback_query_handler(lambda callback: callback.data.startswith('bust_'), state=PhotoStates.waiting_for_bust_size)
+async def handle_bust_size_selection(callback: types.CallbackQuery, state: FSMContext):
+    bust_size = callback.data  # Получаем размер бюста из callback data
+    user_id = str(callback.from_user.id)
+    user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Получение языка пользователя
+
+    if user_lang is None:
+        user_lang = 'en'  # Дефолтное значение, если язык не найден
+
+    # Сохраняем выбранный размер бюста в состоянии
+    await state.update_data(bust_size=bust_size)
+
+    # Получаем сохраненные данные
+    data = await state.get_data()
+    bust_size_message_id = data.get('bust_size_message_id')
+
+    # Удаляем сообщение с выбором размера бюста
+    if bust_size_message_id:
+        await bot.delete_message(chat_id=callback.message.chat.id, message_id=bust_size_message_id)
+
+    # Предложите пользователю выбрать пресет
+    ikb_preset = markups.create_preset_keyboard(user_lang)
+    preset_message = await bot.send_message(chat_id=callback.message.chat.id,
+                                            text='Please, select preset ',
+                                            reply_markup=ikb_preset)
+    await state.update_data(preset_message_id=preset_message.message_id)
     await PhotoStates.waiting_for_preset.set()
 
 
@@ -272,50 +317,29 @@ async def handle_preset_selection(callback: types.CallbackQuery, state: FSMConte
     # Получаем текст пресета из словаря prompts
     selected_preset = tr.prompts.get(preset_key, "")
 
-    # Сохраняем выбранный пресет в состоянии
-    await state.update_data(selected_preset=selected_preset)
-
-    # Предложите пользователю отправить фото
-    await bot.send_message(chat_id=callback.message.chat.id, text="Please send a photo for processing.")
-
-    # Устанавливаем состояние ожидания фотографии
-    await PhotoStates.waiting_for_photo.set()
-
-
-@dp.message_handler(content_types=types.ContentType.PHOTO, state=PhotoStates.waiting_for_photo)
-async def handle_photo(message: types.Message, state: FSMContext):
-    user_id = str(message.from_user.id)
-    user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Получение языка пользователя
-
-    if user_lang is None:
-        user_lang = 'en'  # Дефолтное значение, если язык не найден
-
-    # Получаем выбранный пресет из состояния
+    # Получаем сохраненные данные
     data = await state.get_data()
-    selected_preset = data.get('selected_preset', '')
+    photo_path = data['photo_path']
+    bust_size = data['bust_size']
+    preset_message_id = data.get('preset_message_id')
 
-    file_info = await bot.get_file(message.photo[-1].file_id)
-    file_path = file_info.file_path
+    # Получаем текст пресета из словаря prompts
+    bust_size_text = tr.busts.get(bust_size, "")
 
-    # Создаем папку, если она не существует
-    os.makedirs('./tmp/files/photos', exist_ok=True)
+    # Удаляем сообщение с выбором пресета
+    if preset_message_id:
+        await bot.delete_message(chat_id=callback.message.chat.id, message_id=preset_message_id)
 
-    # Получаем абсолютный путь к файлу
-    file_name = os.path.join(os.getcwd(), './tmp/files/photos', os.path.basename(file_path))
-
-    # Скачиваем файл
-    await bot.download_file(file_path, file_name)
-
-    # Отправляем сообщение с надписью "In process. Wait Please"
-    process_message = await message.reply("In process. Wait Please")
+    # Обработка фото и отправка результата
+    process_message = await bot.send_message(chat_id=callback.message.chat.id, text="In process. Wait Please")
 
     # Попытка списания кредитов
     if await db.deduct_credits(dp['db_pool'], user_id, 20):
-
-        results = await paymont_create_picture(file_name, process_message, selected_preset)
+        final_prompt = f"{selected_preset}, {bust_size_text}"
+        results = await paymont_create_picture(photo_path, process_message, final_prompt)
         if results:
             with open(results, 'rb') as photo:
-                await bot.send_photo(chat_id=message.chat.id,
+                await bot.send_photo(chat_id=callback.message.chat.id,
                                      photo=photo)
 
             # Удаляем обработанный файл
@@ -323,55 +347,65 @@ async def handle_photo(message: types.Message, state: FSMContext):
 
             ikb_menu = markups.create_menu_keyboard(user_lang)
             caption = tr.translations_list[user_lang]['captions_menu']
-
-            await bot.send_photo(chat_id=message.chat.id,
-                                 photo=menu_photo,
-                                 caption=caption,
-                                 reply_markup=ikb_menu,
-                                 parse_mode='Markdown')
+            await bot.send_message(chat_id=callback.message.chat.id,
+                                   text=caption,
+                                   reply_markup=ikb_menu,
+                                   parse_mode='Markdown')
         else:
             text = tr.translations_list[user_lang]['paymont_edit_error']
-            await bot.send_message(chat_id=message.chat.id,
+            await bot.send_message(chat_id=callback.message.chat.id,
                                    text=text)
     else:
         # Обработка файла с вотемаркой
-        img = edit_img.edit_photo(file_name)
+        img = edit_img.edit_photo(photo_path)
         text = tr.translations_list[user_lang]['captions_watermark_succs']
         if img:
             with open(img, 'rb') as photo:
-                await bot.send_photo(chat_id=message.chat.id,
+                await bot.send_photo(chat_id=callback.message.chat.id,
                                      caption=text,
                                      photo=photo)
-
-            # Удаляем файл с вотемаркой
-            os.remove(img)
+                # Удаляем файл с вотемаркой
+                os.remove(img)
 
             ikb_menu = markups.create_menu_keyboard(user_lang)
             caption = tr.translations_list[user_lang]['captions_menu']
-
-            await bot.send_photo(chat_id=message.chat.id,
-                                 photo=menu_photo,
-                                 caption=caption,
-                                 reply_markup=ikb_menu,
-                                 parse_mode='Markdown')
+            await bot.send_message(chat_id=callback.message.chat.id,
+                                   text=caption,
+                                   reply_markup=ikb_menu,
+                                   parse_mode='Markdown')
         else:
             ikb_back = markups.create_back_keyboard(user_lang)
             text = tr.translations_list[user_lang]['paymont_edit_error']
-            await bot.send_message(chat_id=message.chat.id,
+            await bot.send_message(chat_id=callback.message.chat.id,
                                    text=text,
                                    reply_markup=ikb_back)
 
     # Удаляем исходный файл
-    os.remove(file_name)
+    os.remove(photo_path)
 
     # Завершаем состояние
     await state.finish()
 
 
-# Функция для создания и отслеживания задачи
+@dp.callback_query_handler(lambda callback: callback.data == 'cancel', state='*')
+async def cancel_callback(callback: types.CallbackQuery, state: FSMContext):
+    user_lang = await db.get_user_language(dp['db_pool'], str(callback.from_user.id))
+    if user_lang is None:
+        user_lang = 'en'
+
+    await state.finish()
+
+    ikb_menu = markups.create_menu_keyboard(user_lang)
+    caption = tr.translations_list[user_lang]['captions_menu']
+    await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                message_id=callback.message.message_id,
+                                text=caption,
+                                reply_markup=ikb_menu)
+
+
 async def paymont_create_picture(image_path, process_message, prompt):
     user_lang = await db.get_user_language(dp['db_pool'], process_message.chat.id)  # Получение языка пользователя
-
+    print(prompt)
     # URL API для создания задачи и проверки статуса
     base_url = 'https://api.generativecore.ai'
     url_create_task = f'{base_url}/api/v3/tasks'
@@ -485,10 +519,10 @@ async def donate_callback(callback: types.CallbackQuery):
 
     ikb_donate = markups.create_donate_keyboard(user_lang)
     caption = tr.translations_list[user_lang]['captions_donate']
-    await bot.edit_message_caption(chat_id=callback.message.chat.id,
-                                   message_id=callback.message.message_id,
-                                   caption=caption,
-                                   reply_markup=ikb_donate)
+    await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                message_id=callback.message.message_id,
+                                text=caption,
+                                reply_markup=ikb_donate)
 
 
 @dp.callback_query_handler(lambda callback: callback.data.startswith('donate_'))
