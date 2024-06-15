@@ -14,7 +14,11 @@ def replay_keyboard():
 ikb_start = InlineKeyboardMarkup(row_width=2)
 ib1_start = InlineKeyboardButton(text='Русский', callback_data='ru')
 ib2_start = InlineKeyboardButton(text='English', callback_data='en')
-ikb_start.add(ib1_start, ib2_start)
+ib3_start = InlineKeyboardButton(text='中国人', callback_data='chinese')
+ib4_start = InlineKeyboardButton(text='Français', callback_data='fr')
+ib5_start = InlineKeyboardButton(text='Español', callback_data='es')
+
+ikb_start.add(ib1_start, ib2_start, ib3_start, ib4_start, ib5_start)
 
 
 def create_terms_keyboard(user_lang):
@@ -53,13 +57,10 @@ def create_menu_keyboard(user_lang):
 def create_preset_keyboard(user_lang):
     # Preset keyboard _________________________________________________________
     ikb_preset = InlineKeyboardMarkup(row_width=1)
-    ib_preset1 = InlineKeyboardButton(text="prompt_women1", callback_data='prompt_women1')
-    ib_preset2 = InlineKeyboardButton(text="prompt_women2", callback_data='prompt_women2')
-    ib_preset3 = InlineKeyboardButton(text="prompt_women3", callback_data='prompt_women3')
-    ib_preset4 = InlineKeyboardButton(text="prompt_women4", callback_data='prompt_women4')
+    ib_preset3 = InlineKeyboardButton(text="Women", callback_data='prompt_women3')
     ib_preset_back = InlineKeyboardButton(text="⬅️ " + translations.translations_list[user_lang]['button_back'],
                                           callback_data='back')
-    ikb_preset.add(ib_preset1).add(ib_preset2).add(ib_preset3).add(ib_preset4).add(ib_preset_back)
+    ikb_preset.add(ib_preset3).add(ib_preset_back)
     return ikb_preset
 
 
@@ -100,15 +101,27 @@ def create_back_keyboard(user_lang):
 
 def create_donate_keyboard(user_lang):
     # Donate keyboard _________________________________________________________
-    ikb_donate = InlineKeyboardMarkup(row_width=4)
-    ib1_donate = InlineKeyboardButton(text='100', callback_data='donate_100')
-    ib2_donate = InlineKeyboardButton(text='200', callback_data='donate_200')
-    ib3_donate = InlineKeyboardButton(text='500', callback_data='donate_500')
-    ib4_donate = InlineKeyboardButton(text='1000', callback_data='donate_1000')
-    ib5_donate = InlineKeyboardButton(text="⬅️ " + translations.translations_list[user_lang]['button_back'],
+    ikb_donate = InlineKeyboardMarkup(row_width=1)
+    ib1_donate = InlineKeyboardButton(text=translations.translations_list[user_lang]['donate_300'],
+                                      callback_data='donate_300')
+    ib2_donate = InlineKeyboardButton(text=translations.translations_list[user_lang]['donate_500'],
+                                      callback_data='donate_500')
+    ib3_donate = InlineKeyboardButton(text=translations.translations_list[user_lang]['donate_700'],
+                                      callback_data='donate_700')
+    ib4_donate = InlineKeyboardButton(text="⬅️ " + translations.translations_list[user_lang]['button_back'],
                                       callback_data='back')
-    ikb_donate.add(ib1_donate, ib2_donate, ib3_donate, ib4_donate).add(ib5_donate)
+    ikb_donate.add(ib1_donate, ib2_donate, ib3_donate).add(ib4_donate)
     return ikb_donate
+
+
+def create_paymont2_keyboard(user_lang, amount):
+    ikb_paymont2 = InlineKeyboardMarkup(row_width=1)
+    ikb1_paymont2 = InlineKeyboardButton(text="Aaio.so", callback_data=f'pay_aaio_{amount}')
+    ikb2_paymont2 = InlineKeyboardButton(text="RuKassa", callback_data=f'pay_rukassa_{amount}')
+    ib4_paymont2 = InlineKeyboardButton(text="⬅️ " + translations.translations_list[user_lang]['button_back'], callback_data='back')
+
+    ikb_paymont2.add(ikb1_paymont2, ikb2_paymont2, ib4_paymont2)
+    return ikb_paymont2
 
 
 def create_bust_size_keyboard(user_lang):
