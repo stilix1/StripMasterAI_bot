@@ -63,12 +63,30 @@ async def start_command(message: types.Message):
             await db.add_referral_credits(dp['db_pool'], invited_by)
 
         caption = "Welcome! Please select your language."
-        await bot.send_message(chat_id=message.chat.id, text=caption, reply_markup=markups.ikb_start)
+        await bot.send_message(chat_id=message.chat.id,
+                               text=caption,
+                               reply_markup=markups.ikb_start)
     else:
         caption = tr.translations_list[user_lang]['captions_terms']
         ikb_terms = markups.create_terms_keyboard(user_lang)
-        await bot.send_message(chat_id=message.chat.id, text=caption, reply_markup=ikb_terms, parse_mode='Markdown')
+        await bot.send_message(chat_id=message.chat.id, text=caption,
+                               reply_markup=ikb_terms,
+                               parse_mode='Markdown')
 
+
+@dp.message_handler(commands=['language'])
+async def language_command(message: types.Message):
+    user_id = str(message.from_user.id)
+    user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Получение языка пользователя
+
+    if user_lang is None:
+        user_lang = 'en'  # Дефолтное значение, если язык не найден
+
+    caption = "Please select your language."
+
+    await bot.send_message(chat_id=message.chat.id,
+                           text=caption,
+                           reply_markup=markups.ikb_start)
 
 # Menu buttons handlers ___________________________________________________________________
 @dp.message_handler(content_types=["text"])
@@ -177,18 +195,6 @@ async def profile_callback(callback: types.CallbackQuery):
                                 reply_markup=ikb_profile)
 
 
-@dp.message_handler(commands=['language'])
-async def language_command(message: types.Message):
-    user_id = str(message.from_user.id)
-    user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Получение языка пользователя
-
-    if user_lang is None:
-        user_lang = 'en'  # Дефолтное значение, если язык не найден
-
-    caption = "Please select your language."
-    await bot.send_message(chat_id=message.chat.id, text=caption, reply_markup=markups.ikb_start)
-
-
 # Profile buttons handlers _________________________________________________
 def generate_referral_link(user_id):
     bot_name = settings.bot_name
@@ -236,6 +242,7 @@ async def send_photo_api_callback(callback: types.CallbackQuery, state: FSMConte
                                                    reply_markup=ikb_back)
     await state.update_data(photo_request_message_id=photo_request_message.message_id)
     await PhotoStates.waiting_for_photo.set()
+
 
 @dp.message_handler(content_types=types.ContentType.PHOTO, state=PhotoStates.waiting_for_photo)
 async def handle_photo(message: types.Message, state: FSMContext):
@@ -296,18 +303,18 @@ async def handle_bust_size_selection(callback: types.CallbackQuery, state: FSMCo
     if bust_size_message_id:
         await bot.delete_message(chat_id=callback.message.chat.id, message_id=bust_size_message_id)
 
-    # Предложите пользователю выбрать пресет
-    ikb_preset = markups.create_preset_keyboard(user_lang)
-    preset_message = await bot.send_message(chat_id=callback.message.chat.id,
-                                            text='Please, select preset ',
-                                            reply_markup=ikb_preset)
-    await state.update_data(preset_message_id=preset_message.message_id)
+    # # Предложите пользователю выбрать пресет
+    # ikb_preset = markups.create_preset_keyboard(user_lang)
+    # preset_message = await bot.send_message(chat_id=callback.message.chat.id,
+    #                                         text='Please, select preset ',
+    #                                         reply_markup=ikb_preset)
+    # await state.update_data(preset_message_id=preset_message.message_id)
     await PhotoStates.waiting_for_preset.set()
 
 
-@dp.callback_query_handler(lambda callback: callback.data.startswith('prompt_'), state=PhotoStates.waiting_for_preset)
-async def handle_preset_selection(callback: types.CallbackQuery, state: FSMContext):
-    preset_key = callback.data  # Получаем ключ пресета из callback data
+# @dp.callback_query_handler(lambda callback: callback.data.startswith('prompt_'), state=PhotoStates.waiting_for_preset)
+# async def handle_preset_selection(callback: types.CallbackQuery, state: FSMContext):
+#     preset_key = callback.data  # Получаем ключ пресета из callback data
     user_id = str(callback.from_user.id)
     user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Получение языка пользователя
 
@@ -315,7 +322,7 @@ async def handle_preset_selection(callback: types.CallbackQuery, state: FSMConte
         user_lang = 'en'  # Дефолтное значение, если язык не найден
 
     # Получаем текст пресета из словаря prompts
-    selected_preset = tr.prompts.get(preset_key, "")
+    selected_preset = tr.prompts.get('prompt_women', "")
 
     # Получаем сохраненные данные
     data = await state.get_data()
@@ -405,7 +412,6 @@ async def cancel_callback(callback: types.CallbackQuery, state: FSMContext):
 
 async def paymont_create_picture(image_path, process_message, prompt):
     user_lang = await db.get_user_language(dp['db_pool'], process_message.chat.id)  # Получение языка пользователя
-    print(prompt)
     # URL API для создания задачи и проверки статуса
     base_url = 'https://api.generativecore.ai'
     url_create_task = f'{base_url}/api/v3/tasks'
@@ -508,7 +514,6 @@ async def paymont_create_picture(image_path, process_message, prompt):
         await asyncio.sleep(10)
 
 
-# Donate handlers
 @dp.callback_query_handler(lambda callback: callback.data == 'donate')
 async def donate_callback(callback: types.CallbackQuery):
     user_id = str(callback.from_user.id)
@@ -528,13 +533,36 @@ async def donate_callback(callback: types.CallbackQuery):
 @dp.callback_query_handler(lambda callback: callback.data.startswith('donate_'))
 async def handle_pay_callback(callback: types.CallbackQuery):
     user_id = str(callback.from_user.id)
-    user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Получение языка пользователя
+    user_lang = await db.get_user_language(dp['db_pool'], user_id)
     if user_lang is None:
-        user_lang = 'en'  # Дефолтное значение, если язык не найден
-    amount = int(callback.data.split('_')[1])  # Преобразуем amount в int
+        user_lang = 'en'
 
-    # Создание платежа и получение текста для отправки и order_id
-    text, order_id = await paymont.process_payment_command(bot, callback, amount, user_lang, dp['db_pool'])
+    amount = int(callback.data.split('_')[1])
+
+    # Создаем клавиатуру с выбором метода оплаты
+    payment_method_keyboard = markups.create_paymont2_keyboard(user_lang, amount)
+    text = 'Select payment method'
+
+    # Обновляем сообщение, показывая клавиатуру с выбором метода оплаты
+    await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                message_id=callback.message.message_id,
+                                text=text,
+                                reply_markup=payment_method_keyboard)
+
+
+@dp.callback_query_handler(lambda callback: callback.data.startswith('pay_'))
+async def handle_payment_method_callback(callback: types.CallbackQuery):
+    user_id = str(callback.from_user.id)
+    user_lang = await db.get_user_language(dp['db_pool'], user_id)
+    if user_lang is None:
+        user_lang = 'en'
+
+    data = callback.data.split('_')
+    method = data[1]  # Метод оплаты (aaio, rukassa, legitpay, и т.д.)
+    amount = int(data[2])  # Сумма пополнения
+
+    # Создание платежа и получение текста для отправки и order_id в зависимости от метода оплаты
+    text, order_id = await paymont.process_payment_command(bot, callback, amount, user_lang, dp['db_pool'], method)
 
     # Отправляем сообщение с ссылкой на оплату
     await bot.send_message(chat_id=callback.message.chat.id, text=text)
@@ -547,7 +575,7 @@ async def handle_pay_callback(callback: types.CallbackQuery):
         asyncio.create_task(
             paymont.monitor_payment(bot, order_id, settings.RUKASSA_SHOP_ID, settings.RUKASSA_TOKEN,
                                     status_message.chat.id,
-                                    status_message.message_id, user_id, amount, user_lang, dp['db_pool'], order_id))
+                                    status_message.message_id, user_id, amount, user_lang, dp['db_pool'], order_id, method))
 
 
 async def on_startup(dispatcher):
