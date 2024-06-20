@@ -73,9 +73,12 @@ def create_profile_keyboard(user_lang):
                                        callback_data='referral')
     ib3_profile = InlineKeyboardButton(text=translations.translations_list[user_lang]['button_donate'],
                                        callback_data='donate')
-    ib4_profile = InlineKeyboardButton(text="⬅️ " + translations.translations_list[user_lang]['button_back'],
-                                       callback_data='back')
-    ikb_profile.add(ib1_profile).add(ib2_profile, ib3_profile).add(ib4_profile)
+    ib4_profile = InlineKeyboardButton(text=translations.translations_list[user_lang]['referral_text'],
+                                       callback_data='ref_stats')
+    ib_profile_back = InlineKeyboardButton(text="⬅️ " + translations.translations_list[user_lang]['button_back'],
+                                           callback_data='back')
+
+    ikb_profile.add(ib1_profile).add(ib2_profile, ib3_profile, ib4_profile).add(ib_profile_back)
     return ikb_profile
 
 
@@ -118,7 +121,8 @@ def create_paymont2_keyboard(user_lang, amount):
     ikb_paymont2 = InlineKeyboardMarkup(row_width=1)
     ikb1_paymont2 = InlineKeyboardButton(text="Aaio.so", callback_data=f'pay_aaio_{amount}')
     ikb2_paymont2 = InlineKeyboardButton(text="RuKassa", callback_data=f'pay_rukassa_{amount}')
-    ib4_paymont2 = InlineKeyboardButton(text="⬅️ " + translations.translations_list[user_lang]['button_back'], callback_data='back')
+    ib4_paymont2 = InlineKeyboardButton(text="⬅️ " + translations.translations_list[user_lang]['button_back'],
+                                        callback_data='back')
 
     ikb_paymont2.add(ikb1_paymont2, ikb2_paymont2, ib4_paymont2)
     return ikb_paymont2
