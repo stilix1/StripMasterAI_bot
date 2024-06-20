@@ -39,7 +39,14 @@ translations_list = {
         "create_url_create_error": "Error creating payment:",
         "create_url_succs": "Please proceed to the payment link: ",
         "create_url_error": "Please proceed to the payment link: ",
-        "captions_bust_size": "Select bust size"
+        "captions_bust_size": "Select bust size",
+        "referral_text": 'Статистика рефелалов',
+        "referral_stats_template": f"""
+Referral statistics:
+ Invitations via the link: {{referrals}}
+ The total amount of user replenishments via the link: {{total_spent}} units
+ Total number of units earned via referral link: {{total_referral_credit}} units
+        """,
     },
     'ru': {
         "button_profile": "Профиль",
@@ -73,7 +80,14 @@ translations_list = {
         "create_url_create_error": "Ошибка при создании платежа:",
         "create_url_succs": "Пожалуйста, перейдите по ссылке для оплаты: ",
         "create_url_error": "Произошла ошибка. Обратитесь со скриншотом к поддержке. ",
-        "captions_bust_size": "Выберите размер бюста"
+        "captions_bust_size": "Выберите размер бюста",
+        "referral_text": 'Статистика рефелалов',
+        "referral_stats_template": f"""
+Реферальная статистика:
+Приглашений по ссылке: {{referrals}}
+Общая сумма пополнений пользователей по ссылке: {{total_spent}} единиц
+Общее количество заработанных по реферальной ссылке: {{total_referral_credit}} единиц
+        """,
     },
     'chinese': {
         "button_profile": "个人资料",
@@ -107,7 +121,14 @@ translations_list = {
         "create_url_create_error": "创建付款时出错:",
         "create_url_succs": "请前往支付链接: ",
         "create_url_error": "请前往支付链接: ",
-        "captions_bust_size": "选择胸围尺寸"
+        "captions_bust_size": "选择胸围尺寸",
+        "referral_text": 'Статистика рефелалов',
+        "referral_stats_template": f"""
+推荐统计：
+ 通过链接发出邀请：{{referrals}}
+ 用户通过链接充值的总金额：{{total_spent}} 单位
+ 通过推荐链接获得的单位总数：{{total_referral_credit}} 个单位
+        """,
     },
     'fr': {
         "button_profile": "Profil",
@@ -151,7 +172,14 @@ translations_list = {
         "create_url_create_error": "Erreur lors de la création du paiement :",
         "create_url_succs": "Veuillez procéder au lien de paiement : ",
         "create_url_error": "Veuillez procéder au lien de paiement : ",
-        "captions_bust_size": "Sélectionnez la taille du buste"
+        "captions_bust_size": "Sélectionnez la taille du buste",
+        "referral_text": 'Статистика рефелалов',
+        "referral_stats_template": f"""
+Statistiques de référencement :
+ Invitations via le lien : {{références}}
+ Le montant total des réapprovisionnements des utilisateurs via le lien : {{total_spent}} unités
+ Nombre total d'unités gagnées via le lien de parrainage : {{total_referral_credit}} unités
+        """,
     },
     'es': {
         "button_profile": "Perfil",
@@ -193,7 +221,14 @@ translations_list = {
         "create_url_create_error": "Error al crear el pago:",
         "create_url_succs": "Por favor, proceda al enlace de pago: ",
         "create_url_error": "Por favor, proceda al enlace de pago: ",
-        "captions_bust_size": "Seleccione el tamaño del busto"
+        "captions_bust_size": "Seleccione el tamaño del busto",
+        "referral_text": 'Статистика рефелалов',
+        "referral_stats_template": f"""
+Estadísticas de referencias:
+ Invitaciones a través del enlace: {{referrals}}
+ La cantidad total de reposiciones de usuarios a través del enlace: {{total_spent}} unidades
+ Número total de unidades obtenidas a través del enlace de referencia: {{total_referral_credit}} unidades
+        """,
     }
 }
 
