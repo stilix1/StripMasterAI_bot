@@ -28,12 +28,25 @@ async def monitor_payment(bot, order_id, shop_id, token, chat_id, message_id, us
             expired_date = payment_status.get('expired_date', 'N/A')
 
             if status in ['PAID', 'success', 'expired', 'CANCEL']:
-                # Сохранение транзакции в базе данных с использованием transaction_id
+                # Сохранение основной транзакции в базе данных с использованием transaction_id
                 await db.record_transaction(db_pool, transaction_id, user_id, status, amount)
 
                 if status in ['PAID', 'success']:
                     # Добавление кредитов пользователю
                     await db.add_user_credits(db_pool, user_id, amount)
+
+                    # Находим пригласившего пользователя
+                    referrer_id = await db.get_referrer_id(db_pool, user_id)
+
+                    if referrer_id:
+                        # Рассчитываем реферальный бонус
+                        referral_bonus = int(amount * 0.1)  # 10% от суммы платежа
+
+                        # Сохраняем реферальную транзакцию в базе данных
+                        await db.record_referral_transaction(db_pool, referrer_id, user_id, referral_bonus)
+
+                        # Добавляем реферальный бонус пригласившему пользователю
+                        await db.add_user_credits(db_pool, referrer_id, referral_bonus)
 
                 return f"Payment status for order {order_id}: {status}"
             else:
