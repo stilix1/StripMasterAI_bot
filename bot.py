@@ -13,6 +13,7 @@ from aiogram.dispatcher import FSMContext, Dispatcher
 from aiogram.dispatcher.filters import state
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
+from aiogram.utils.markdown import bold, text
 
 import db
 import edit_img
@@ -31,6 +32,10 @@ dp = Dispatcher(bot, storage=storage)
 user_lang = None
 
 
+class NewsletterState(StatesGroup):
+    waiting_for_message = State()
+
+
 class PhotoStates(StatesGroup):
     waiting_for_preset = State()
     waiting_for_photo = State()
@@ -47,10 +52,25 @@ async def start_command(message: types.Message):
     user_lang = await db.get_user_language(dp['db_pool'], user_id)
 
     replay_keyboard = markups.replay_keyboard()
+
+    if message.chat.id in settings.ADMIN_IDS:
+        text = f'''
+Welcome!
+/menu - menu
+/language - change language
+
+
+Admin menu:
+/ref_info - статистка по рефералам по id
+/stats - статистика пользователей
+/newsletter - рассылка
+'''
+    else:
+        text = 'Welcome!\n/menu - menu\n/language - change language'
+
     await bot.send_message(chat_id=message.chat.id,
-                           text='Welcome!\n/menu - menu\n/language - change language',
-                           reply_markup=replay_keyboard,
-                           parse_mode='Markdown')
+                           text=text,
+                           reply_markup=replay_keyboard)
 
     if not user_lang:
         ref_link = generate_referral_link(user_id)
@@ -87,6 +107,156 @@ async def language_command(message: types.Message):
     await bot.send_message(chat_id=message.chat.id,
                            text=caption,
                            reply_markup=markups.ikb_start)
+
+
+@dp.message_handler(commands=['stats'])
+async def send_stats(message: types.Message):
+    if message.from_user.id not in settings.ADMIN_IDS:
+        await message.reply("You do not have permission to use this command.")
+        return
+
+    # Статистика пользователей за все время
+    total_users = await db.get_total_users(dp['db_pool'])
+
+    # Статистика новых пользователей за неделю
+    users_last_week = await db.get_users_last_week(dp['db_pool'])
+
+    # Статистика новых пользователей за месяц
+    users_last_month = await db.get_users_last_month(dp['db_pool'])
+
+    # Статистика новых пользователей по реферальной ссылке
+    new_users_count = await db.get_new_users_from_referral(dp['db_pool'])
+
+    # Статистика пользователей, перешедших по ссылке и пополнивших баланс
+    users_with_balance = await db.get_users_with_balance_from_referral(dp['db_pool'])
+
+    # Общая сумма пополнений всех пользователей по реферальной ссылке
+    total_referral_topups = await db.get_total_referral_topups(dp['db_pool'])
+
+    stats_message = text(
+            f"Статистика бота:\n\n"
+            f"👥 Новые пользователи по реферальной ссылке: {new_users_count}\n"
+            f"💳 Пользователи, перешедшие и пополнившие баланс: {users_with_balance}\n"
+            f"💰 Общая сумма пополнений по реферальной ссылке: {total_referral_topups} единиц\n"
+            f"Всего пользователей: {total_users}\n",
+            f"Пользователей за неделю: {users_last_week}\n",
+            f"Пользователей за месяц: {users_last_month}\n"
+        )
+
+    await message.reply(stats_message)
+
+    user_details = await db.get_all_users(dp['db_pool'])
+    file_path = 'users.txt'
+    with open(file_path, 'w') as file:
+        for user in user_details:
+            file.write(f"DB ID: {user['serial_id']}, Telegram ID: {user['id']}, Username: {user['username']}, Created at: {user['created_at']}, "
+                       f"Language: {user['selected_language']}, Ref Link: {user['ref_link']}, Invited By: {user['invited_by']}, "
+                       f"Credits Free: {user['credits_free']}, Credits Paid: {user['credits_paid']}, Credits Ref: {user['credits_ref']}\n")
+
+    with open(file_path, 'rb') as file:
+        await bot.send_document(message.chat.id, file, caption="User Details")
+
+
+@dp.message_handler(commands=['ref_info'])
+async def handle_ref_info(message: types.Message):
+    # Проверяем, что команда отправлена администратором
+    if message.from_user.id not in settings.ADMIN_IDS:
+        return
+
+    # Получаем айди пользователя из сообщения
+    command_parts = message.text.split()
+    if len(command_parts) != 2:
+        await message.reply("Использование: /ref_info id")
+        return
+
+    user_id = int(command_parts[1])
+
+    try:
+        # Получаем информацию о реферальной активности пользователя
+        new_users_count = await db.get_new_users_from_referral_by_id(dp['db_pool'], user_id)
+        users_with_balance = await db.get_users_with_balance_from_referral_by_id(dp['db_pool'], user_id)
+        total_referral_topups = await db.get_total_referral_topups_by_id(dp['db_pool'], user_id)
+
+        # Формируем сообщение с информацией
+        message_text = (
+            f"Информация о пользователе с ID {user_id}:\n"
+            f"Количество рефералов: {new_users_count}\n"
+            f"Количество пользователей с пополнением: {users_with_balance}\n"
+            f"Общая сумма пополнений: {total_referral_topups}\n"
+        )
+
+        # Отправляем сообщение с информацией
+        await message.reply(message_text)
+
+    except Exception as e:
+        await message.reply(f"Ошибка при получении информации: {str(e)}")
+
+
+# Функция для отправки рассылки всем пользователям
+async def send_newsletter_to_all_users(text):
+    try:
+        # Получаем список всех зарегистрированных пользователей
+        users = await db.get_all_registered_users(dp['db_pool'])
+        success_msg = "Успешно отправлено:\n"
+        failure_msg = "Не удалось отправить:\n"
+
+        for user_id in users:
+            try:
+                await bot.send_message(user_id, text)
+                success_msg += f"{user_id} 👍🏻\n"
+                print(f"Сообщение успешно отправлено пользователю с ID {user_id}")
+                await asyncio.sleep(0.05)  # Делаем небольшую паузу между отправками
+            except Exception as e:
+                failure_msg += f"{user_id} 👎🏻\n"
+                print(f"Ошибка при отправке сообщения пользователю с ID {user_id}: {e}")
+                continue
+
+        print("Рассылка завершена.")
+        return success_msg, failure_msg
+    except Exception as ex:
+        print(f"Ошибка при выполнении рассылки: {ex}")
+        return "Ошибка при выполнении рассылки", ""
+
+    except Exception as e:
+        print(f"Ошибка при получении списка пользователей из базы данных: {e}")
+
+
+# Обработчик команды /newsletter для администраторов
+@dp.message_handler(commands=['newsletter'], user_id=settings.ADMIN_IDS, state="*")
+async def newsletter_command(message: types.Message, state: FSMContext):
+    user_id = str(message.from_user.id)
+    user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Получение языка пользователя
+
+    # Отправляем сообщение с приглашением ввести текст рассылки и кнопкой для отмены
+    markup = markups.create_back_keyboard(user_lang)
+    await message.answer("Введите текст рассылки. Для отмены нажмите кнопку ниже.", reply_markup=markup)
+
+    # Устанавливаем состояние FSM, ожидающее текста рассылки
+    await NewsletterState.waiting_for_message.set()
+
+
+# Обработчик ответа на текст рассылки
+@dp.message_handler(state=NewsletterState.waiting_for_message, content_types=types.ContentType.TEXT)
+async def process_newsletter_text(message: types.Message, state: FSMContext):
+    # Получаем текст рассылки из сообщения
+    newsletter_text = message.text
+
+    # Отправляем рассылку всем зарегистрированным пользователям
+    success_msg, failure_msg = await send_newsletter_to_all_users(newsletter_text)
+
+    await message.reply(success_msg)
+    await message.reply(failure_msg)
+
+    # Сбрасываем состояние FSM
+    await state.finish()
+
+
+# Обработчик кнопки отмены рассылки
+@dp.callback_query_handler(lambda query: query.data == 'cancel_newsletter')
+async def cancel_newsletter(query: types.CallbackQuery):
+    await query.message.answer("Рассылка отменена.")
+    await query.answer()
+
 
 # Menu buttons handlers ___________________________________________________________________
 @dp.message_handler(content_types=["text"])
@@ -311,10 +481,9 @@ async def handle_bust_size_selection(callback: types.CallbackQuery, state: FSMCo
     # await state.update_data(preset_message_id=preset_message.message_id)
     await PhotoStates.waiting_for_preset.set()
 
-
-# @dp.callback_query_handler(lambda callback: callback.data.startswith('prompt_'), state=PhotoStates.waiting_for_preset)
-# async def handle_preset_selection(callback: types.CallbackQuery, state: FSMContext):
-#     preset_key = callback.data  # Получаем ключ пресета из callback data
+    # @dp.callback_query_handler(lambda callback: callback.data.startswith('prompt_'), state=PhotoStates.waiting_for_preset)
+    # async def handle_preset_selection(callback: types.CallbackQuery, state: FSMContext):
+    #     preset_key = callback.data  # Получаем ключ пресета из callback data
     user_id = str(callback.from_user.id)
     user_lang = await db.get_user_language(dp['db_pool'], user_id)  # Получение языка пользователя
 
@@ -530,6 +699,29 @@ async def donate_callback(callback: types.CallbackQuery):
                                 reply_markup=ikb_donate)
 
 
+@dp.callback_query_handler(lambda callback: callback.data == 'ref_stats')
+async def ref_stats_callback(callback: types.CallbackQuery):
+    user_id = str(callback.from_user.id)
+    user_lang = await db.get_user_language(dp['db_pool'], user_id)
+
+    if user_lang is None:
+        user_lang = 'en'
+
+    # Используйте user_id, который вы уже извлекли
+    referrals, total_referral_credit = await db.get_referral_stats(pool=dp['db_pool'], user_id=user_id)
+
+    message = f"Реферальная статистика:\n\n"
+    message += f"Приглашений по ссылке: {referrals}\n"
+    message += f"Общее количество заработка по реферальной ссылке: {total_referral_credit} единиц\n"
+
+    ref_stats_keyboard = markups.create_back_keyboard(user_lang)
+    # Обновляем сообщение, показывая клавиатуру с выбором метода оплаты
+    await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                message_id=callback.message.message_id,
+                                text=message,
+                                reply_markup=ref_stats_keyboard)
+
+
 @dp.callback_query_handler(lambda callback: callback.data.startswith('donate_'))
 async def handle_pay_callback(callback: types.CallbackQuery):
     user_id = str(callback.from_user.id)
@@ -575,7 +767,8 @@ async def handle_payment_method_callback(callback: types.CallbackQuery):
         asyncio.create_task(
             paymont.monitor_payment(bot, order_id, settings.RUKASSA_SHOP_ID, settings.RUKASSA_TOKEN,
                                     status_message.chat.id,
-                                    status_message.message_id, user_id, amount, user_lang, dp['db_pool'], order_id, method))
+                                    status_message.message_id, user_id, amount, user_lang, dp['db_pool'], order_id,
+                                    method))
 
 
 async def on_startup(dispatcher):
