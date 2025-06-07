@@ -1,4 +1,5 @@
-# 🤖 my_bot – Telegram AI бот с реферальной системой
+# 🤖 
+StripMasterAI – Telegram AI бот с реферальной системой
 
 ![Python](https://img.shields.io/badge/Python-3.10-blue.svg)
 ![Aiogram](https://img.shields.io/badge/Aiogram-2.14-lightgrey)
