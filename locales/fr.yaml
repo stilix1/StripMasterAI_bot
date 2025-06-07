@@ -1,0 +1,33 @@
+"button_profile": "Profil"
+"button_supp": "Support"
+"button_send_photo_api": "Envoyer une photo"
+"button_referral": "Système de parrainage"
+"button_donate": "Recharger le solde"
+"button_back": "Retour"
+"captions_menu": "Salut ! Je suis un bot basé sur un réseau neuronal capable de retirer les vêtements des photos.\n\nNous utilisons des réseaux neuronaux avancés pour un traitement rapide sans compromettre la qualité. Vous obtiendrez le résultat souhaité !\n\n◾️ [Notre canal principal](https://t.me/strip_master)\n\n📷 Envoyez une photo au bot et profitez de la magie !✨"
+"button_terms_yes": "D'accord"
+"button_terms_no": "Pas d'accord"
+"captions_terms": "👁 Pour commencer à utiliser le bot, veuillez lire les [conditions d'utilisation](https://telegra.ph/TERMS-AND-CONDITIONS-04-27-2).\n⚠️ En cliquant sur le bouton « J'accepte », vous confirmez avoir 18 ans ou plus et acceptez les conditions d'utilisation."
+"captions_terms_no": "Vous avez refusé les conditions d'utilisation. Veuillez réessayer avec la commande /start."
+"captions_donate": "Choisissez le montant à recharger dans la liste ci-dessous"
+"captions_profile": "👨‍💻 Utilisateur : @{{username}}\n🔎 ID : {{user_id}}\n\n💸 Gains : {{ref_balance}} jetons\n✅ Solde actuel : {{balance}} jetons\n\n👙 Traitements disponibles : {{processing}}"
+"captions_ref": "💸 Gains : {{ref_balance}} jetons\n✅ Solde actuel : {{balance}} jetons\n\n👙 Traitements disponibles : {{processing}}\n\n🔗 Votre lien de parrainage : {{ref_link}}\n\n🤝 Gagnez avec nous !\nRecevez 2 traitements gratuits pour chaque utilisateur parrainé. 1 photo = 20 jetons.\nCommencez dès maintenant - partagez votre lien !"
+"captions_send_photo_api": "✋ Attendez ! Avant tout, veuillez lire cette [instruction importante](https://teletype.in/@stilix1/strip_master_bot)👈.\n\nSi vous l'avez déjà lue, envoyez simplement une photo au bot comme un message classique."
+"error_download": "Échec du traitement de la photo, veuillez réessayer !"
+"donate_300": "15 photos - 300 ₽"
+"donate_500": "30 photos - 500₽ (-17%)"
+"donate_700": "50 photos - 700₽ (-30%)"
+"task_status": "Statut du traitement : {{status}}. Heure de mise à jour : {{current_time}}"
+"paymnt_task_status": "Statut du traitement : {{status}}. Heure de mise à jour : {{current_time}}. Date d'expiration : {{expired_date}}"
+"captions_watermark_succs": "☑️ La photo a été traitée avec succès, tous les vêtements ont été retirés.\n💠 Pour obtenir la photo sans flou et en haute qualité, achetez simplement un traitement et renvoyez la photo."
+"paymont_edit_error": "Échec du traitement de la photo, veuillez choisir une autre photo"
+"create_url_create_error": "Erreur lors de la création du paiement :"
+"create_url_succs": "Veuillez suivre ce lien pour effectuer le paiement : "
+"create_url_error": "Une erreur s'est produite. Veuillez contacter le support avec une capture d'écran."
+"captions_bust_size": "Sélectionnez la taille du buste"
+"referral_text": "Statistiques de parrainage"
+"referral_stats_template": |
+  Statistiques de parrainage :
+   Invitations via le lien : {{referrals}}
+   Montant total des recharges effectuées via le lien : {{total_spent}} unités
+   Total des jetons gagnés via le lien de parrainage : {{total_referral_credit}} unités

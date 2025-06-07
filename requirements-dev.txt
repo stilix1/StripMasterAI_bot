@@ -1,0 +1,11 @@
+asyncpg==0.29.0
+requests==2.31.0
+aiogram==2.14.2
+aiohttp==3.8.6
+pillow==10.3.0
+flake8==7.2.0
+black==25.1.0
+isort==6.0.1
+pytest==8.3.5
+pytest-asyncio==1.0.0
+aioresponses==0.7.8

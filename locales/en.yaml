@@ -1,0 +1,33 @@
+button_profile: "Profile"
+button_supp: "Support"
+button_send_photo_api: "Send Photo"
+button_referral: "Referral System"
+button_donate: "Top Up Balance"
+button_back: "Back"
+captions_menu: "Hello! I am a bot that uses neural networks to remove clothes from photos.\n\nWe use advanced neural networks for fast processing without sacrificing quality. You will get the desired result!\n\n◾️ [Our main channel](https://t.me/strip_master)\n\n📷 Send a photo to the bot and enjoy the magic!✨"
+button_terms_yes: "Agree"
+button_terms_no: "Disagree"
+captions_terms: "👁 To start using the bot, you need to read the [user agreement](https://telegra.ph/TERMS-AND-CONDITIONS-04-27-2).\n⚠️ By clicking the 'I Agree' button, you confirm that you are 18 years old and accept the terms of the user agreement."
+captions_terms_no: "You have declined the user agreement. Please try again using the /start command."
+captions_donate: "Choose the desired amount to top up from the list below"
+captions_profile: "👨‍💻 User: @{{username}}\n🔎 ID: {{user_id}}\n\n💸 Earned: {{ref_balance}} tokens \n✅ Current balance: {{balance}} tokens \n\n👙 Available processes: {{processing}}"
+captions_ref: "💸 Earned: {{ref_balance}} tokens \n✅ Current balance: {{balance}} tokens \n\n👙 Available processes: {{processing}}\n\n🔗 Your personal invitation link: {{ref_link}}\n\n🤝 Earn with us!\nGet 2 free processes for each user you invite. 1 photo = 20 tokens.\nStart now - share your link!"
+captions_send_photo_api: "✋ Hold on, hold on! First, a small but important [instruction](https://teletype.in/@stilix1/strip_master_bot)👈 Read it.\n\nIf you've already read it, just send a photo to the bot like a regular message."
+error_download: "Failed to process the photo, please try again!"
+donate_300: "15 photos - 300 ₽"
+donate_500: "30 photos - 500₽ (-17%)"
+donate_700: "50 photos - 700₽ (-30%)"
+task_status: "Processing status: {{status}}. Update time: {{current_time}}."
+paymnt_task_status: "Processing status: {{status}}. Update time: {{current_time}}. Expired date: {{expired_date}}"
+captions_watermark_succs: "☑️ The photo has been successfully processed, all clothes have been removed.\n💠 To get the photo without blur and in high quality, simply purchase the processing and send the photo again."
+paymont_edit_error: "Failed to process the photo, please choose another photo"
+create_url_create_error: "Error creating payment:"
+create_url_succs: "Please proceed to the payment link: "
+create_url_error: "An error occurred. Please contact support."
+captions_bust_size: "Select bust size"
+referral_text: "Referral statistics"
+referral_stats_template: |
+  Referral statistics:
+  Invitations via the link: {{referrals}}
+  The total amount of user replenishments via the link: {{total_spent}} units
+  Total number of units earned via referral link: {{total_referral_credit}} units

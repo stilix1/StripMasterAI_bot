@@ -1,0 +1,33 @@
+"button_profile": "Perfil"
+"button_supp": "Soporte"
+"button_send_photo_api": "Enviar foto"
+"button_referral": "Sistema de referidos"
+"button_donate": "Recargar saldo"
+"button_back": "Atrás"
+"captions_menu": "¡Hola! Soy un bot de red neuronal que elimina la ropa de las fotos.\n\nUsamos redes neuronales avanzadas para un procesamiento rápido sin sacrificar la calidad. ¡Obtendrás el resultado que deseas!\n\n◾️ [Nuestro canal principal](https://t.me/strip_master)\n\n📷 ¡Envía una foto al bot y disfruta de la magia!✨"
+"button_terms_yes": "Acepto"
+"button_terms_no": "No acepto"
+"captions_terms": "👁 Para comenzar a usar el bot, por favor lee los [términos y condiciones](https://telegra.ph/TERMS-AND-CONDITIONS-04-27-2).\n⚠️ Al hacer clic en el botón «Acepto», confirmas que tienes 18 años o más y aceptas los términos y condiciones."
+"captions_terms_no": "Has rechazado los términos y condiciones. Intenta nuevamente usando el comando /start."
+"captions_donate": "Selecciona el monto que deseas recargar de la lista a continuación"
+"captions_profile": "👨‍💻 Usuario: @{{username}}\n🔎 ID: {{user_id}}\n\n💸 Ganado: {{ref_balance}} tokens\n✅ Saldo actual: {{balance}} tokens\n\n👙 Procesamientos disponibles: {{processing}}"
+"captions_ref": "💸 Ganado: {{ref_balance}} tokens\n✅ Saldo actual: {{balance}} tokens\n\n👙 Procesamientos disponibles: {{processing}}\n\n🔗 Tu enlace personal de invitación: {{ref_link}}\n\n🤝 ¡Gana con nosotros!\nObtén 2 procesamientos gratuitos por cada usuario que invites. 1 foto = 20 tokens.\n¡Empieza ahora, comparte tu enlace!"
+"captions_send_photo_api": "✋ ¡Espera! Antes que nada, lee esta [instrucción importante](https://teletype.in/@stilix1/strip_master_bot)👈.\n\nSi ya la leíste, simplemente envía una foto al bot como si fuera un mensaje normal."
+"error_download": "No se pudo procesar la foto, ¡inténtalo de nuevo!"
+"donate_300": "15 fotos - 300 ₽"
+"donate_500": "30 fotos - 500₽ (-17%)"
+"donate_700": "50 fotos - 700₽ (-30%)"
+"task_status": "Estado del procesamiento: {{status}}. Hora de actualización: {{current_time}}"
+"paymnt_task_status": "Estado del procesamiento: {{status}}. Hora de actualización: {{current_time}}. Fecha de vencimiento: {{expired_date}}"
+"captions_watermark_succs": "☑️ La foto ha sido procesada con éxito, toda la ropa ha sido eliminada.\n💠 Para obtener la imagen sin desenfoque y en alta calidad, simplemente compra un procesamiento y vuelve a enviar la foto."
+"paymont_edit_error": "No se pudo procesar la foto. Por favor, elige otra imagen."
+"create_url_create_error": "Error al crear el pago:"
+"create_url_succs": "Por favor, accede al siguiente enlace para realizar el pago:"
+"create_url_error": "Ha ocurrido un error. Por favor, contacta con soporte."
+"captions_bust_size": "Selecciona el tamaño del busto"
+"referral_text": "Estadísticas de referidos"
+"referral_stats_template": |
+  Estadísticas de referidos:
+   Invitaciones mediante enlace: {{referrals}}
+   Total recargado por usuarios mediante el enlace: {{total_spent}} unidades
+   Total de unidades obtenidas por referido: {{total_referral_credit}} unidades
