@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# VSCode / PyCharm / JetBrains IDEs
+.idea/
+.vscode/
+*.iml
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.cache
+pytest_cache/
+coverage.xml
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.bak
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.*
+
+# Results / generated files
+/tmp/
+tmp/
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+
+# Ignore compiled binaries
+*.so
+*.pyd
